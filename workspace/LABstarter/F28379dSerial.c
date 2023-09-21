@@ -652,11 +652,6 @@ __interrupt void RXAINT_recv_ready(void)
     } else {
         RXAdata = RXAdata & 0x00FF;
 
-        char tmp[2];
-        tmp[0] = RXAdata;
-        serial_sendSCID(&SerialD, tmp,1);
-
-
         numRXA ++;
     }
 
