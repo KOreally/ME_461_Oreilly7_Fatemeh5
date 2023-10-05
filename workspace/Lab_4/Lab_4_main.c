@@ -41,6 +41,9 @@ uint16_t UARTPrint = 0;
 uint16_t LEDdisplaynum = 0;
 uint16_t adcd0result = 0;
 uint16_t adcd1result = 0;
+uint16_t adca2result = 0;
+uint16_t adca3result = 0;
+uint16_t adcb4result = 0;
 float ADCvolts = 0;
 uint32_t count = 0;
 float ADCIND0 = 0;
@@ -72,16 +75,26 @@ void setDACB(float dacouta1) {
 //float xk_3 = 0;
 //float xk_4 = 0;
 //yk is the filtered value
-const uint16_t arraySize = 22;
+const uint16_t arraySize = 101;
 float yk = 0;
+float yka2 = 0;
+float yka3 = 0;
+float ykb4 = 0;
 float xk[arraySize] = {0};
+float xka2[arraySize] = {0};
+float xka3[arraySize] = {0};
+float xkb4[arraySize] = {0};
+
+
 //b is the filter coefficients
 //float b[5] = {0.2,0.2,0.2,0.2,0.2}; // 0.2 is 1/5th therefore a 5 point average
 //float b[5]={    3.3833240118424500e-02, 2.4012702387971543e-01, 4.5207947200372001e-01, 2.4012702387971543e-01, 3.3833240118424500e-02};
-float b[22]={   -2.3890045153263611e-03,    -3.3150057635348224e-03,    -4.6136191242627002e-03,    -4.1659855521681268e-03,    1.4477422497795286e-03, 1.5489414225159667e-02, 3.9247886844071371e-02, 7.0723964095458614e-02, 1.0453473887246176e-01, 1.3325672639406205e-01, 1.4978314227429904e-01, 1.4978314227429904e-01, 1.3325672639406205e-01, 1.0453473887246176e-01, 7.0723964095458614e-02, 3.9247886844071371e-02, 1.5489414225159667e-02, 1.4477422497795286e-03, -4.1659855521681268e-03,    -4.6136191242627002e-03,    -3.3150057635348224e-03,    -2.3890045153263611e-03};
+//float b[22]={   -2.3890045153263611e-03,    -3.3150057635348224e-03,    -4.6136191242627002e-03,    -4.1659855521681268e-03,    1.4477422497795286e-03, 1.5489414225159667e-02, 3.9247886844071371e-02, 7.0723964095458614e-02, 1.0453473887246176e-01, 1.3325672639406205e-01, 1.4978314227429904e-01, 1.4978314227429904e-01, 1.3325672639406205e-01, 1.0453473887246176e-01, 7.0723964095458614e-02, 3.9247886844071371e-02, 1.5489414225159667e-02, 1.4477422497795286e-03, -4.1659855521681268e-03,    -4.6136191242627002e-03,    -3.3150057635348224e-03,    -2.3890045153263611e-03};
+//float b[32]={   -6.3046914864397922e-04,    -1.8185681242784432e-03,    -2.5619416124584822e-03,    -1.5874939943956356e-03,    2.3695126689747326e-03, 8.3324969783531780e-03, 1.1803612855040625e-02, 6.7592967793297151e-03, -9.1745119977290398e-03,    -2.9730906886035850e-02,    -3.9816452266421651e-02,    -2.2301647638687881e-02,    3.1027965907247105e-02, 1.1114350049251465e-01, 1.9245540210070616e-01, 2.4373020388648489e-01, 2.4373020388648489e-01, 1.9245540210070616e-01, 1.1114350049251465e-01, 3.1027965907247105e-02, -2.2301647638687881e-02,    -3.9816452266421651e-02,    -2.9730906886035850e-02,    -9.1745119977290398e-03,    6.7592967793297151e-03, 1.1803612855040625e-02, 8.3324969783531780e-03, 2.3695126689747326e-03, -1.5874939943956356e-03,    -2.5619416124584822e-03,    -1.8185681242784432e-03,    -6.3046914864397922e-04};
+float b[101]={  -4.1384865093955942e-18,    2.4158288163475484e-05, -1.3320677588450310e-04,    -2.1438469575543533e-04,    1.1898399936030848e-04, 5.3082205069710680e-04, 2.1893290271722703e-04, -7.4768481245699380e-04,    -9.5792023943993328e-04,    4.6168341621969679e-04, 1.8598657706234230e-03, 7.0670080707196015e-04, -2.2492456754091747e-03,    -2.7055293027965603e-03,    1.2307634272343665e-03, 4.6993269406780981e-03, 1.6984303126684232e-03, -5.1577427312871921e-03,    -5.9361687426490355e-03,    2.5904429699616822e-03, 9.5104864390879260e-03, 3.3122378905612003e-03, -9.7118714382866452e-03,    -1.0812123641265282e-02,    4.5715859206989177e-03, 1.6287321385412081e-02, 5.5122975619431172e-03, -1.5726675339333283e-02,    -1.7056081487002734e-02,    7.0329483752597077e-03, 2.4459678182842035e-02, 8.0882772704277336e-03, -2.2565290379886044e-02,    -2.3949227569375457e-02,    9.6706866781569138e-03, 3.2957303117234021e-02, 1.0685317933349465e-02, -2.9243552530078470e-02,    -3.0461077862757931e-02,    1.2077118105660343e-02, 4.0427773465971463e-02, 1.2879264031643200e-02, -3.4645501075422983e-02,    -3.5481182001261206e-02,    1.3834430631479126e-02, 4.5553192553114567e-02, 1.4277570256188015e-02, -3.7792491047513456e-02,    -3.8090059866479127e-02,    1.4617663668474229e-02, 4.7377897417654163e-02, 1.4617663668474229e-02, -3.8090059866479127e-02,    -3.7792491047513456e-02,    1.4277570256188015e-02, 4.5553192553114567e-02, 1.3834430631479126e-02, -3.5481182001261206e-02,    -3.4645501075422983e-02,    1.2879264031643200e-02, 4.0427773465971463e-02, 1.2077118105660343e-02, -3.0461077862757931e-02,    -2.9243552530078470e-02,    1.0685317933349465e-02, 3.2957303117234021e-02, 9.6706866781569138e-03, -2.3949227569375457e-02,    -2.2565290379886044e-02,    8.0882772704277336e-03, 2.4459678182842035e-02, 7.0329483752597077e-03, -1.7056081487002734e-02,    -1.5726675339333283e-02,    5.5122975619431172e-03, 1.6287321385412081e-02, 4.5715859206989177e-03, -1.0812123641265282e-02,    -9.7118714382866452e-03,    3.3122378905612003e-03, 9.5104864390879260e-03, 2.5904429699616822e-03, -5.9361687426490355e-03,    -5.1577427312871921e-03,    1.6984303126684232e-03, 4.6993269406780981e-03, 1.2307634272343665e-03, -2.7055293027965603e-03,    -2.2492456754091747e-03,    7.0670080707196015e-04, 1.8598657706234230e-03, 4.6168341621969679e-04, -9.5792023943993328e-04,    -7.4768481245699380e-04,    2.1893290271722703e-04, 5.3082205069710680e-04, 1.1898399936030848e-04, -2.1438469575543533e-04,    -1.3320677588450310e-04,    2.4158288163475484e-05, -4.1384865093955942e-18};
 //adcd1 pie interrupt
 __interrupt void ADCD_ISR (void) {
-    float yk = 0;
+     yk = 0;
     adcd0result = AdcdResultRegs.ADCRESULT0;
     adcd1result = AdcdResultRegs.ADCRESULT1;
     // Here covert ADCIND0, ADCIND1 to volts
@@ -95,20 +108,91 @@ __interrupt void ADCD_ISR (void) {
 
     //Save past states before exiting from the function so that next sample they are the older state
     for (int j = arraySize; j > 0; j--){
-           xk[j]=xk[j-1];
-       }
-//    xk_4 = xk_3;
-//    xk_3 = xk_2;
-//    xk_2 = xk_1;
-//    xk_1 = xk;
+        xk[j]=xk[j-1];
+    }
+    //    xk_4 = xk_3;
+    //    xk_3 = xk_2;
+    //    xk_2 = xk_1;
+    //    xk_1 = xk;
     // Here write yk to DACA channel
     setDACA(yk);
+    // Print ADCINA2 and ADCINA3’s voltage value to TeraTerm every 100ms
+    count ++;
+    if ((count % 100) == 0) {
+        UARTPrint = 1;
+    }
+    AdcdRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //clear interrupt flag
+    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+}
+
+__interrupt void ADCB_ISR (void) {
+    GpioDataRegs.GPBSET.bit.GPIO52 = 1;
+    ykb4 = 0;
+    adcb4result = AdcbResultRegs.ADCRESULT0;
+    // Here covert ADCINB4, ADCINA3 to volts
+    xkb4[0] = adcb4result*3.0/4096.0; //voltage reading
+    for (int i = 0; i <= arraySize; i++){
+        ykb4 = ykb4+b[i]*xkb4[i];
+
+    }
+    //yk = b[0]*xk + b[1]*xk_1 + b[2]*xk_2 + b[3]*xk_3 + b[4]*xk_4;
+
+    //Save past states before exiting from the function so that next sample they are the older state
+    for (int j = arraySize; j > 0; j--){
+        xkb4[j]=xkb4[j-1];
+    }
+    //    xk_4 = xk_3;
+    //    xk_3 = xk_2;
+    //    xk_2 = xk_1;
+    //    xk_1 = xk;
+    // Here write yk to DACA channel
+    setDACA(ykb4+1.5);
+    // Print ADCIND0 and ADCIND1’s voltage value to TeraTerm every 100ms
+//    count ++;
+//    if ((count % 100) == 0) {
+//        UARTPrint = 1;
+//    }
+    AdcbRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //clear interrupt flag
+    PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
+    GpioDataRegs.GPBCLEAR.bit.GPIO52 = 1;
+}
+
+
+//KOR_FCH:Ex3
+__interrupt void ADCA_ISR (void) {
+    yka2 = 0;
+    yka3 = 0;
+    adca2result = AdcaResultRegs.ADCRESULT0;
+    adca3result = AdcaResultRegs.ADCRESULT1;
+    // Here covert ADCINA2, ADCINA3 to volts
+    xka2[0] = adca2result*3.0/4096.0; //voltage reading
+    xka3[0] = adca3result*3.0/4096.0; //voltage reading
+
+    for (int i = 0; i <= arraySize; i++){
+        yka2 = yka2+b[i]*xka2[i];
+        yka3 = yka3+b[i]*xka3[i];
+
+    }
+    //yk = b[0]*xk + b[1]*xk_1 + b[2]*xk_2 + b[3]*xk_3 + b[4]*xk_4;
+
+    //Save past states before exiting from the function so that next sample they are the older state
+    for (int j = arraySize; j > 0; j--){
+        xka2[j]=xka2[j-1];
+        xka3[j]=xka3[j-1];
+    }
+    //    xk_4 = xk_3;
+    //    xk_3 = xk_2;
+    //    xk_2 = xk_1;
+    //    xk_1 = xk;
+    // Here write yk to DACA channel
+    setDACA(yka2);
+    setDACA(yka3);
     // Print ADCIND0 and ADCIND1’s voltage value to TeraTerm every 100ms
     count ++;
-        if ((count % 100) == 0) {
-            UARTPrint = 1;
-        }
-    AdcdRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //clear interrupt flag
+    if ((count % 100) == 0) {
+        UARTPrint = 1;
+    }
+    AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //clear interrupt flag
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
 }
 
@@ -229,6 +313,12 @@ void main(void)
     GPIO_SetupPinOptions(160, GPIO_OUTPUT, GPIO_PUSHPULL);
     GpioDataRegs.GPFCLEAR.bit.GPIO160 = 1;
 
+    // filtering time
+        GPIO_SetupPinMux(52, GPIO_MUX_CPU1, 0);
+        GPIO_SetupPinOptions(52, GPIO_OUTPUT, GPIO_PUSHPULL);
+        GpioDataRegs.GPBCLEAR.bit.GPIO52 = 1;
+
+
     //WIZNET Reset
     GPIO_SetupPinMux(0, GPIO_MUX_CPU1, 0);
     GPIO_SetupPinOptions(0, GPIO_OUTPUT, GPIO_PUSHPULL);
@@ -327,6 +417,10 @@ void main(void)
     PieVectTable.SCIC_TX_INT = &TXCINT_data_sent;
     PieVectTable.SCID_TX_INT = &TXDINT_data_sent;
     PieVectTable.ADCD1_INT = &ADCD_ISR;
+    PieVectTable.ADCA1_INT = &ADCA_ISR;
+    PieVectTable.ADCB1_INT = &ADCB_ISR;
+
+
 
 
     PieVectTable.EMIF_ERROR_INT = &SWI_isr;
@@ -374,33 +468,37 @@ void main(void)
     DELAY_US(1000);
     //Select the channels to convert and end of conversion flag
     //Many statements commented out, To be used when using ADCA or ADCB
+
     //ADCA
 
-    //AdcaRegs.ADCSOC0CTL.bit.CHSEL = 0; //SOC0 will convert Channel you choose Does not have to be A0
-    //AdcaRegs.ADCSOC0CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
-    //AdcaRegs.ADCSOC0CTL.bit.TRIGSEL = 0Dh ;// EPWM5 ADCSOCA or another trigger you choose will  trigger SOC0
-    //AdcaRegs.ADCSOC1CTL.bit.CHSEL = ???; //SOC1 will convert Channel you choose Does not have to   be A1
-    //AdcaRegs.ADCSOC1CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
-    //AdcaRegs.ADCSOC1CTL.bit.TRIGSEL = ???;// EPWM5 ADCSOCA or another trigger you choose will  trigger SOC1
-    //AdcaRegs.ADCINTSEL1N2.bit.INT1SEL = ???; //set to last SOC that is converted and it will set INT1 flag ADCA1
-    //AdcaRegs.ADCINTSEL1N2.bit.INT1E = 1; //enable INT1 flag
-    //AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //make sure INT1 flag is cleared
+    AdcaRegs.ADCSOC0CTL.bit.CHSEL = 2; //SOC0 will convert Channel you choose Does not have to be A2
+    AdcaRegs.ADCSOC0CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
+    AdcaRegs.ADCSOC0CTL.bit.TRIGSEL = 13;// EPWM5 ADCSOCA or another trigger you choose will  trigger SOC0
+    AdcaRegs.ADCSOC1CTL.bit.CHSEL = 3; //SOC1 will convert Channel you choose Does not have to  be A3
+    AdcaRegs.ADCSOC1CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
+    AdcaRegs.ADCSOC1CTL.bit.TRIGSEL = 13;// EPWM5 ADCSOCA or another trigger you choose will  trigger SOC1
+    AdcaRegs.ADCINTSEL1N2.bit.INT1SEL =1; //set to last SOC that is converted and it will set INT1 flag ADCA1
+    AdcaRegs.ADCINTSEL1N2.bit.INT1E = 1; //enable INT1 flag
+    AdcaRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //make sure INT1 flag is cleared
+
+
     //ADCB
-    //AdcbRegs.ADCSOC0CTL.bit.CHSEL = ???; //SOC0 will convert Channel you choose Does not have to    be B0
-    //AdcbRegs.ADCSOC0CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
-    //AdcbRegs.ADCSOC0CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will   trigger SOC0
-    //AdcbRegs.ADCSOC1CTL.bit.CHSEL = ???; //SOC1 will convert Channel you choose Does not have to    be B1
-    //AdcbRegs.ADCSOC1CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
-    //AdcbRegs.ADCSOC1CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will    trigger SOC1
-    //AdcbRegs.ADCSOC2CTL.bit.CHSEL = ???; //SOC2 will convert Channel you choose Does not have to    be B2
-    //AdcbRegs.ADCSOC2CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
-    //AdcbRegs.ADCSOC2CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will  trigger SOC2
-    //AdcbRegs.ADCSOC3CTL.bit.CHSEL = ???; //SOC3 will convert Channel you choose Does not have to   be B3
-    //AdcbRegs.ADCSOC3CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
-    //AdcbRegs.ADCSOC3CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will   trigger SOC3
-    //AdcbRegs.ADCINTSEL1N2.bit.INT1SEL = ???; //set to last SOC that is converted and it will set  INT1 flag ADCB1
-    //AdcbRegs.ADCINTSEL1N2.bit.INT1E = 1; //enable INT1 flag
-    //AdcbRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //make sure INT1 flag is cleared
+    AdcbRegs.ADCSOC0CTL.bit.CHSEL = 4; //SOC0 will convert Channel you choose Does not have to    be B4
+    AdcbRegs.ADCSOC0CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
+    AdcbRegs.ADCSOC0CTL.bit.TRIGSEL = 13; // EPWM5 ADCSOCA or another trigger you choose will   trigger SOC0
+//    AdcbRegs.ADCSOC1CTL.bit.CHSEL = ???; //SOC1 will convert Channel you choose Does not have to    be B1
+//    AdcbRegs.ADCSOC1CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
+//    AdcbRegs.ADCSOC1CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will    trigger SOC1
+//    AdcbRegs.ADCSOC2CTL.bit.CHSEL = ???; //SOC2 will convert Channel you choose Does not have to    be B2
+//    AdcbRegs.ADCSOC2CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
+//    AdcbRegs.ADCSOC2CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will  trigger SOC2
+//    AdcbRegs.ADCSOC3CTL.bit.CHSEL = ???; //SOC3 will convert Channel you choose Does not have to   be B3
+//    AdcbRegs.ADCSOC3CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
+//    AdcbRegs.ADCSOC3CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will   trigger SOC3
+    AdcbRegs.ADCINTSEL1N2.bit.INT1SEL = 0; //set to last SOC that is converted and it will set  INT1 flag ADCB1
+    AdcbRegs.ADCINTSEL1N2.bit.INT1E = 1; //enable INT1 flag
+    AdcbRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //make sure INT1 flag is cleared
+
     //ADCD
     AdcdRegs.ADCSOC0CTL.bit.CHSEL = 0; // set SOC0 to convert pin D0
     AdcdRegs.ADCSOC0CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
@@ -414,7 +512,7 @@ void main(void)
     //AdcdRegs.ADCSOC3CTL.bit.CHSEL = ???; //set SOC3 to convert pin D3
     //AdcdRegs.ADCSOC3CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
     //AdcdRegs.ADCSOC3CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA will trigger SOC3
-    AdcdRegs.ADCINTSEL1N2.bit.INT1SEL = 1; //set to SOC1, the last converted, and it will set INT1  flag ADCD1
+    AdcdRegs.ADCINTSEL1N2.bit.INT1SEL = 1; //set to SOC1, the last converted, and it will set INT1  flag ADCB1
     AdcdRegs.ADCINTSEL1N2.bit.INT1E = 1; //enable INT1 flag
     AdcdRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //make sure INT1 flag is cleared
     EDIS;
@@ -439,7 +537,9 @@ void main(void)
     EPwm5Regs.TBPHS.bit.TBPHS = 0x0000; // Phase is 0
     EPwm5Regs.TBCTL.bit.PHSEN = 0; // Disable phase loading
     EPwm5Regs.TBCTL.bit.CLKDIV = 0; // divide by 1 50Mhz Clock
-    EPwm5Regs.TBPRD = 50000; // Set Period to 1ms sample. Input clock is 50MHz.
+//    EPwm5Regs.TBPRD = 50000; // Set Period to 1ms sample. Input clock is 50MHz.//kor_fch ex1,2,3
+   // EPwm5Regs.TBPRD = 12500; // Set Period to 0.25ms sample. Input clock is 50MHz.//kor_fch ex4
+    EPwm5Regs.TBPRD = 5000; // Set Period to 0.1ms sample. Input clock is 50MHz.//kor_fch ex4
     // Notice here that we are not setting CMPA or CMPB because we are not using the PWM signal
     EPwm5Regs.ETSEL.bit.SOCAEN = 1; //enable SOCA
     EPwm5Regs.TBCTL.bit.CTRMODE = 0; //unfreeze, and enter up count mode
@@ -460,7 +560,14 @@ void main(void)
     PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
 
     //FCH_KOR: Enable TINT0 in the PIE: Group 1 interrupt 6
-    PieCtrlRegs.PIEIER1.bit.INTx6 = 1;
+    // PieCtrlRegs.PIEIER1.bit.INTx6 = 1; //kor_fch ex1
+
+
+    //FCH_KOR: Enable TINT0 in the PIE: Group 1 interrupt 1
+   // PieCtrlRegs.PIEIER1.bit.INTx1 = 1; //kor_fch ex3
+
+    //FCH_KOR: Enable TINT0 in the PIE: Group 1 interrupt 10
+      PieCtrlRegs.PIEIER1.bit.INTx2 = 1; //kor_fch ex4
 
     // Enable SWI in the PIE: Group 12 interrupt 9
     PieCtrlRegs.PIEIER12.bit.INTx9 = 1;
@@ -478,7 +585,8 @@ void main(void)
     {
         if (UARTPrint == 1 ) {
             //            serial_printf(&SerialA,"Num Timer2:%ld Num SerialRX: %ld\r\n",CpuTimer2.InterruptCount,numRXA);
-            serial_printf(&SerialA,"ADC Voltage %.3f\r\n",yk);
+//            serial_printf(&SerialA,"ADC Voltage %.3f\r\n",yk);
+            serial_printf(&SerialA,"ADCA2 Voltage =  %.3f ADCA3 Voltage =  %.3f \r\n",yka2,yka3);
             UARTPrint = 0;
 
 
