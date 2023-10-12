@@ -50,24 +50,23 @@ float ADCIND0 = 0;
 
 //This function sets DACA to the voltage between 0V and 3V passed to this function.
 //If outside 0V to 3V the output is saturated at 0V to 3V
-//Example code
 //float myu = 2.25;
 //setDACA(myu); // DACA will now output 2.25 Volts
 void setDACA(float dacouta0) {
     int16_t DACOutInt = 0;
-    DACOutInt = dacouta0*4096.0/3.0; // perform scaling of 0 – almost 3V to 0 - 4095
+    DACOutInt = dacouta0*4096.0/3.0; //KOR_FCH,set this such that we perform scaling of 0 ï¿½ almost 3V to 0 - 4095
     if (DACOutInt > 4095) DACOutInt = 4095;
     if (DACOutInt < 0) DACOutInt = 0;
     DacaRegs.DACVALS.bit.DACVALS = DACOutInt;
 }
 void setDACB(float dacouta1) {
     int16_t DACOutInt = 0;
-    DACOutInt = dacouta1*4096.0/3.0; // perform scaling of 0 – almost 3V to 0 - 4095
+    DACOutInt = dacouta1*4096.0/3.0; //KOR_FCH, set as above to perform scaling of 0 ï¿½ almost 3V to 0 - 4095
     if (DACOutInt > 4095) DACOutInt = 4095;
     if (DACOutInt < 0) DACOutInt = 0;
     DacbRegs.DACVALS.bit.DACVALS = DACOutInt;
 }
-
+//KOR_FCH below is the part for filtering in exercise two that we begin with (a 5 tap averaging filter) which we then remove as we use the MATLAB FIR1 Function to create our FIR filter
 //xk is the current ADC reading, xk_1 is the ADC reading one millisecond ago, xk_2 two milliseconds ago
 //float xk = 0;
 //float xk_1 = 0;
@@ -85,7 +84,7 @@ float xka2[arraySize] = {0};
 float xka3[arraySize] = {0};
 float xkb4[arraySize] = {0};
 
-
+//KOR_FCH for implementing the FIR filter we used MATLAB FIR1 to find the b coefficients for implementation in exercise 2 and in other parts of this lab
 //b is the filter coefficients
 //float b[5] = {0.2,0.2,0.2,0.2,0.2}; // 0.2 is 1/5th therefore a 5 point average
 //float b[5]={    3.3833240118424500e-02, 2.4012702387971543e-01, 4.5207947200372001e-01, 2.4012702387971543e-01, 3.3833240118424500e-02};
@@ -93,10 +92,11 @@ float xkb4[arraySize] = {0};
 //float b[32]={   -6.3046914864397922e-04,    -1.8185681242784432e-03,    -2.5619416124584822e-03,    -1.5874939943956356e-03,    2.3695126689747326e-03, 8.3324969783531780e-03, 1.1803612855040625e-02, 6.7592967793297151e-03, -9.1745119977290398e-03,    -2.9730906886035850e-02,    -3.9816452266421651e-02,    -2.2301647638687881e-02,    3.1027965907247105e-02, 1.1114350049251465e-01, 1.9245540210070616e-01, 2.4373020388648489e-01, 2.4373020388648489e-01, 1.9245540210070616e-01, 1.1114350049251465e-01, 3.1027965907247105e-02, -2.2301647638687881e-02,    -3.9816452266421651e-02,    -2.9730906886035850e-02,    -9.1745119977290398e-03,    6.7592967793297151e-03, 1.1803612855040625e-02, 8.3324969783531780e-03, 2.3695126689747326e-03, -1.5874939943956356e-03,    -2.5619416124584822e-03,    -1.8185681242784432e-03,    -6.3046914864397922e-04};
 float b[101]={  -4.1384865093955942e-18,    2.4158288163475484e-05, -1.3320677588450310e-04,    -2.1438469575543533e-04,    1.1898399936030848e-04, 5.3082205069710680e-04, 2.1893290271722703e-04, -7.4768481245699380e-04,    -9.5792023943993328e-04,    4.6168341621969679e-04, 1.8598657706234230e-03, 7.0670080707196015e-04, -2.2492456754091747e-03,    -2.7055293027965603e-03,    1.2307634272343665e-03, 4.6993269406780981e-03, 1.6984303126684232e-03, -5.1577427312871921e-03,    -5.9361687426490355e-03,    2.5904429699616822e-03, 9.5104864390879260e-03, 3.3122378905612003e-03, -9.7118714382866452e-03,    -1.0812123641265282e-02,    4.5715859206989177e-03, 1.6287321385412081e-02, 5.5122975619431172e-03, -1.5726675339333283e-02,    -1.7056081487002734e-02,    7.0329483752597077e-03, 2.4459678182842035e-02, 8.0882772704277336e-03, -2.2565290379886044e-02,    -2.3949227569375457e-02,    9.6706866781569138e-03, 3.2957303117234021e-02, 1.0685317933349465e-02, -2.9243552530078470e-02,    -3.0461077862757931e-02,    1.2077118105660343e-02, 4.0427773465971463e-02, 1.2879264031643200e-02, -3.4645501075422983e-02,    -3.5481182001261206e-02,    1.3834430631479126e-02, 4.5553192553114567e-02, 1.4277570256188015e-02, -3.7792491047513456e-02,    -3.8090059866479127e-02,    1.4617663668474229e-02, 4.7377897417654163e-02, 1.4617663668474229e-02, -3.8090059866479127e-02,    -3.7792491047513456e-02,    1.4277570256188015e-02, 4.5553192553114567e-02, 1.3834430631479126e-02, -3.5481182001261206e-02,    -3.4645501075422983e-02,    1.2879264031643200e-02, 4.0427773465971463e-02, 1.2077118105660343e-02, -3.0461077862757931e-02,    -2.9243552530078470e-02,    1.0685317933349465e-02, 3.2957303117234021e-02, 9.6706866781569138e-03, -2.3949227569375457e-02,    -2.2565290379886044e-02,    8.0882772704277336e-03, 2.4459678182842035e-02, 7.0329483752597077e-03, -1.7056081487002734e-02,    -1.5726675339333283e-02,    5.5122975619431172e-03, 1.6287321385412081e-02, 4.5715859206989177e-03, -1.0812123641265282e-02,    -9.7118714382866452e-03,    3.3122378905612003e-03, 9.5104864390879260e-03, 2.5904429699616822e-03, -5.9361687426490355e-03,    -5.1577427312871921e-03,    1.6984303126684232e-03, 4.6993269406780981e-03, 1.2307634272343665e-03, -2.7055293027965603e-03,    -2.2492456754091747e-03,    7.0670080707196015e-04, 1.8598657706234230e-03, 4.6168341621969679e-04, -9.5792023943993328e-04,    -7.4768481245699380e-04,    2.1893290271722703e-04, 5.3082205069710680e-04, 1.1898399936030848e-04, -2.1438469575543533e-04,    -1.3320677588450310e-04,    2.4158288163475484e-05, -4.1384865093955942e-18};
 //adcd1 pie interrupt
-__interrupt void ADCD_ISR (void) {
-     yk = 0;
+__interrupt void ADCD_ISR (void) { //KOR_FCH added the hardware interrupt function for ADCD for exercise 1
+    yk = 0;
     adcd0result = AdcdResultRegs.ADCRESULT0;
     adcd1result = AdcdResultRegs.ADCRESULT1;
+    //KOR_FCH as mentined prior, parts for exercise 2 for filtering are both here as well as some commented out as we start with one filter and then use the MATLAB FIR1
     // Here covert ADCIND0, ADCIND1 to volts
     xk[0] = adcd0result*3.0/4096.0; //voltage reading
 
@@ -116,7 +116,7 @@ __interrupt void ADCD_ISR (void) {
     //    xk_1 = xk;
     // Here write yk to DACA channel
     setDACA(yk);
-    // Print ADCINA2 and ADCINA3’s voltage value to TeraTerm every 100ms
+    // Print ADCINA2 and ADCINA3ï¿½s voltage value to TeraTerm every 100ms
     count ++;
     if ((count % 100) == 0) {
         UARTPrint = 1;
@@ -147,11 +147,11 @@ __interrupt void ADCB_ISR (void) {
     //    xk_1 = xk;
     // Here write yk to DACA channel
     setDACA(ykb4+1.5);
-    // Print ADCIND0 and ADCIND1’s voltage value to TeraTerm every 100ms
-//    count ++;
-//    if ((count % 100) == 0) {
-//        UARTPrint = 1;
-//    }
+    //KOR_FCH Exercise 1 Print ADCIND0 and ADCIND1ï¿½s voltage value to TeraTerm every 100ms
+    //    count ++;
+    //    if ((count % 100) == 0) {
+    //        UARTPrint = 1;
+    //    }
     AdcbRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //clear interrupt flag
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP1;
     GpioDataRegs.GPBCLEAR.bit.GPIO52 = 1;
@@ -187,7 +187,7 @@ __interrupt void ADCA_ISR (void) {
     // Here write yk to DACA channel
     setDACA(yka2);
     setDACA(yka3);
-    // Print ADCIND0 and ADCIND1’s voltage value to TeraTerm every 100ms
+    // Print ADCIND0 and ADCIND1ï¿½s voltage value to TeraTerm every 100ms
     count ++;
     if ((count % 100) == 0) {
         UARTPrint = 1;
@@ -204,7 +204,7 @@ __interrupt void ADCA_ISR (void) {
 //    ADCvolts = adcd0result*3.0/4096.0;
 //    // Here write voltages value to DACA
 //    setDACA(ADCvolts);
-//    // Print ADCIND0’s voltage value to TeraTerm every 100ms
+//    // Print ADCIND0ï¿½s voltage value to TeraTerm every 100ms
 //    count ++;
 //    if ((count % 100) == 0) {
 //        UARTPrint = 1;
@@ -314,9 +314,9 @@ void main(void)
     GpioDataRegs.GPFCLEAR.bit.GPIO160 = 1;
 
     // filtering time
-        GPIO_SetupPinMux(52, GPIO_MUX_CPU1, 0);
-        GPIO_SetupPinOptions(52, GPIO_OUTPUT, GPIO_PUSHPULL);
-        GpioDataRegs.GPBCLEAR.bit.GPIO52 = 1;
+    GPIO_SetupPinMux(52, GPIO_MUX_CPU1, 0);
+    GPIO_SetupPinOptions(52, GPIO_OUTPUT, GPIO_PUSHPULL);
+    GpioDataRegs.GPBCLEAR.bit.GPIO52 = 1;
 
 
     //WIZNET Reset
@@ -416,7 +416,7 @@ void main(void)
     PieVectTable.SCIB_TX_INT = &TXBINT_data_sent;
     PieVectTable.SCIC_TX_INT = &TXCINT_data_sent;
     PieVectTable.SCID_TX_INT = &TXDINT_data_sent;
-    PieVectTable.ADCD1_INT = &ADCD_ISR;
+    PieVectTable.ADCD1_INT = &ADCD_ISR; //KOR_FCH These assign PieVectTable.ADCD1_INT to the memory address location of our ISR function.
     PieVectTable.ADCA1_INT = &ADCA_ISR;
     PieVectTable.ADCB1_INT = &ADCB_ISR;
 
@@ -444,6 +444,7 @@ void main(void)
 
     init_serialSCIA(&SerialA,115200);
 
+    //KOR_FCH Added the code below to initialize calling for ADC Interrupt and set bits in ADCD, ADCA, and ADCB accordingly as we follow the Lab
     EALLOW;
     //write configurations for all ADCs ADCA, ADCB, ADCC, ADCD
     AdcaRegs.ADCCTL2.bit.PRESCALE = 6; //set ADCCLK divider to /4
@@ -486,15 +487,15 @@ void main(void)
     AdcbRegs.ADCSOC0CTL.bit.CHSEL = 4; //SOC0 will convert Channel you choose Does not have to    be B4
     AdcbRegs.ADCSOC0CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
     AdcbRegs.ADCSOC0CTL.bit.TRIGSEL = 13; // EPWM5 ADCSOCA or another trigger you choose will   trigger SOC0
-//    AdcbRegs.ADCSOC1CTL.bit.CHSEL = ???; //SOC1 will convert Channel you choose Does not have to    be B1
-//    AdcbRegs.ADCSOC1CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
-//    AdcbRegs.ADCSOC1CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will    trigger SOC1
-//    AdcbRegs.ADCSOC2CTL.bit.CHSEL = ???; //SOC2 will convert Channel you choose Does not have to    be B2
-//    AdcbRegs.ADCSOC2CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
-//    AdcbRegs.ADCSOC2CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will  trigger SOC2
-//    AdcbRegs.ADCSOC3CTL.bit.CHSEL = ???; //SOC3 will convert Channel you choose Does not have to   be B3
-//    AdcbRegs.ADCSOC3CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
-//    AdcbRegs.ADCSOC3CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will   trigger SOC3
+    //    AdcbRegs.ADCSOC1CTL.bit.CHSEL = ???; //SOC1 will convert Channel you choose Does not have to    be B1
+    //    AdcbRegs.ADCSOC1CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
+    //    AdcbRegs.ADCSOC1CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will    trigger SOC1
+    //    AdcbRegs.ADCSOC2CTL.bit.CHSEL = ???; //SOC2 will convert Channel you choose Does not have to    be B2
+    //    AdcbRegs.ADCSOC2CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
+    //    AdcbRegs.ADCSOC2CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will  trigger SOC2
+    //    AdcbRegs.ADCSOC3CTL.bit.CHSEL = ???; //SOC3 will convert Channel you choose Does not have to   be B3
+    //    AdcbRegs.ADCSOC3CTL.bit.ACQPS = 99; //sample window is acqps + 1 SYSCLK cycles = 500ns
+    //    AdcbRegs.ADCSOC3CTL.bit.TRIGSEL = ???; // EPWM5 ADCSOCA or another trigger you choose will   trigger SOC3
     AdcbRegs.ADCINTSEL1N2.bit.INT1SEL = 0; //set to last SOC that is converted and it will set  INT1 flag ADCB1
     AdcbRegs.ADCINTSEL1N2.bit.INT1E = 1; //enable INT1 flag
     AdcbRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //make sure INT1 flag is cleared
@@ -517,6 +518,7 @@ void main(void)
     AdcdRegs.ADCINTFLGCLR.bit.ADCINT1 = 1; //make sure INT1 flag is cleared
     EDIS;
 
+    //KOR_FCH For this lab we utilize DACA but in the future we may use DACB so we will initialize both therefore start with some setup with regards to the bits.
     // Enable DACA and DACB outputs
     EALLOW;
     DacaRegs.DACOUTEN.bit.DACOUTEN = 1; //enable dacA output-->uses ADCINA0
@@ -528,18 +530,19 @@ void main(void)
     EDIS;
 
     // Enable CPU int1 which is connected to CPU-Timer 0, CPU int13
+    // KOR_FCH Added the following code and filled in the blanks such that we set up EPWM5 as a timer to trigger the ADCD conversion sequence
     EALLOW;
     EPwm5Regs.ETSEL.bit.SOCAEN = 0; // Disable SOC on A group
     EPwm5Regs.TBCTL.bit.CTRMODE = 3; // freeze counter
     EPwm5Regs.ETSEL.bit.SOCASEL = 2; // Select Event when counter equal to PRD
-    EPwm5Regs.ETPS.bit.SOCAPRD = 1; // Generate pulse on 1st event (“pulse” is the same as “trigger”)
+    EPwm5Regs.ETPS.bit.SOCAPRD = 1; // Generate pulse on 1st event (ï¿½pulseï¿½ is the same as ï¿½triggerï¿½)
     EPwm5Regs.TBCTR = 0x0; // Clear counter
     EPwm5Regs.TBPHS.bit.TBPHS = 0x0000; // Phase is 0
     EPwm5Regs.TBCTL.bit.PHSEN = 0; // Disable phase loading
     EPwm5Regs.TBCTL.bit.CLKDIV = 0; // divide by 1 50Mhz Clock
-//    EPwm5Regs.TBPRD = 50000; // Set Period to 1ms sample. Input clock is 50MHz.//kor_fch ex1,2,3
-   // EPwm5Regs.TBPRD = 12500; // Set Period to 0.25ms sample. Input clock is 50MHz.//kor_fch ex4
-    EPwm5Regs.TBPRD = 5000; // Set Period to 0.1ms sample. Input clock is 50MHz.//kor_fch ex4
+    //EPwm5Regs.TBPRD = 50000; // Set Period to 1ms sample. Input clock is 50MHz. //KOR_FCH ex1,2,3 utilize this, but for example 4 this is set to 5000
+    //EPwm5Regs.TBPRD = 12500; // Set Period to 0.25ms sample. Input clock is 50MHz. //KOR_FCH ex4 utilized this at first but then it needed to be changed for a different sampling period
+    EPwm5Regs.TBPRD = 5000; // Set Period to 0.1ms sample. Input clock is 50MHz.//KOR_FCH ex4
     // Notice here that we are not setting CMPA or CMPB because we are not using the PWM signal
     EPwm5Regs.ETSEL.bit.SOCAEN = 1; //enable SOCA
     EPwm5Regs.TBCTL.bit.CTRMODE = 0; //unfreeze, and enter up count mode
@@ -560,14 +563,14 @@ void main(void)
     PieCtrlRegs.PIEIER1.bit.INTx7 = 1;
 
     //FCH_KOR: Enable TINT0 in the PIE: Group 1 interrupt 6
-    // PieCtrlRegs.PIEIER1.bit.INTx6 = 1; //kor_fch ex1
+    // PieCtrlRegs.PIEIER1.bit.INTx6 = 1; //KOR_FCH EX1 (used for part 1), essentially used to enable the ADCD1 interrupt
 
 
     //FCH_KOR: Enable TINT0 in the PIE: Group 1 interrupt 1
-   // PieCtrlRegs.PIEIER1.bit.INTx1 = 1; //kor_fch ex3
+    // PieCtrlRegs.PIEIER1.bit.INTx1 = 1; //kor_fch EX3 (used for part 3)
 
     //FCH_KOR: Enable TINT0 in the PIE: Group 1 interrupt 10
-      PieCtrlRegs.PIEIER1.bit.INTx2 = 1; //kor_fch ex4
+    PieCtrlRegs.PIEIER1.bit.INTx2 = 1; //kor_fch EX4 (used for part4)
 
     // Enable SWI in the PIE: Group 12 interrupt 9
     PieCtrlRegs.PIEIER12.bit.INTx9 = 1;
@@ -585,7 +588,7 @@ void main(void)
     {
         if (UARTPrint == 1 ) {
             //            serial_printf(&SerialA,"Num Timer2:%ld Num SerialRX: %ld\r\n",CpuTimer2.InterruptCount,numRXA);
-//            serial_printf(&SerialA,"ADC Voltage %.3f\r\n",yk);
+            //            serial_printf(&SerialA,"ADC Voltage %.3f\r\n",yk);
             serial_printf(&SerialA,"ADCA2 Voltage =  %.3f ADCA3 Voltage =  %.3f \r\n",yka2,yka3);
             UARTPrint = 0;
 

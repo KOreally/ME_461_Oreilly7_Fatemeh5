@@ -1,7 +1,9 @@
 //#############################################################################
 // FILE:lab3_main.c
 //
-// TITLE:  Lab Starter
+// TITLE:  lab3
+//
+// Initials: FCH_KOR
 //#############################################################################
 
 // Included Files
@@ -16,7 +18,7 @@
 #include "device.h"
 #include "F28379dSerial.h"
 #include "LEDPatterns.h"
-//#include "song.h" //kor fchex 4
+//#include "song.h" //
 #include "dsp.h"
 #include "fpu32/fpu_rfft.h"
 
@@ -42,6 +44,7 @@
 #define A5FLATNOTE ((uint16_t)(((50000000/2)/2)/830.61))
 #define OFFNOTE 0
 #define SONG_LENGTH 48
+//FCH_KOR: making our nokia ringtone song
 uint16_t songarray[SONG_LENGTH] = {
 E5NOTE,
 D5NOTE,
@@ -66,24 +69,6 @@ A4NOTE,
 A4NOTE,
 A4NOTE,
 
-//G4NOTE,
-//G4NOTE,
-//G4NOTE,
-//A4NOTE,
-//B4NOTE,
-//D4NOTE,
-//D4NOTE,
-//C4NOTE,
-//B4NOTE,
-//A4NOTE,
-//A4NOTE,
-//B4NOTE,
-//D4NOTE,
-//D4NOTE,
-//C4NOTE,
-//B4NOTE,
-
-
 
 };
 
@@ -95,6 +80,7 @@ A4NOTE,
 // The Launchpad's CPU Frequency set to 200 you should not change this value
 #define LAUNCHPAD_CPU_FREQUENCY 200
 
+//FCH_KOR predefine functions
 void setEPWM2A(float controleffort);
 void setEPWM2B(float controleffort);
 void setEPWM8A(float degrees);
@@ -116,10 +102,10 @@ uint16_t LEDdisplaynum = 0;
 uint16_t flag=0;
 uint16_t flag2=0;
 uint16_t flagdegrees1=0;
-uint16_t flagdegrees2=0;
 float controleffort=0;
 float degrees = -90;
 uint16_t index  = 0;
+
 void main(void)
 {
     // PLL, WatchDog, enable Peripheral Clocks
@@ -139,10 +125,10 @@ void main(void)
     GpioDataRegs.GPBSET.bit.GPIO34 = 1;
 
     // LED1 and PWM Pin
-    GPIO_SetupPinMux(22, GPIO_MUX_CPU1, 5);
+    GPIO_SetupPinMux(22, GPIO_MUX_CPU1, 5); //FCH_KOR: set the PinMux to use EPWM ineasted of GPIO
     GPIO_SetupPinOptions(22, GPIO_OUTPUT, GPIO_PUSHPULL);
     // GpioDataRegs.GPACLEAR.bit.GPIO22 = 1;
-    GpioCtrlRegs.GPAPUD.bit.GPIO22 =1;
+    GpioCtrlRegs.GPAPUD.bit.GPIO22 =1;//FCH_KOR:disable the pull-up resistor
 
     // LED2
     GPIO_SetupPinMux(94, GPIO_MUX_CPU1, 0);
@@ -338,7 +324,7 @@ void main(void)
     CpuTimer2Regs.TCR.all = 0x4000;
 
 
-    init_serialSCIA(&SerialA,115200);
+    init_serialSCIA(&SerialA,115200); // FCH_KOR: Modify the initialization code for EPWM8A and B to
 
     EALLOW; // Below are protected registers
     GpioCtrlRegs.GPAPUD.bit.GPIO2 = 1; // For EPWM2A
@@ -349,6 +335,7 @@ void main(void)
     GpioCtrlRegs.GPAPUD.bit.GPIO22 = 1; // For EPWM12A
     EDIS;
 
+    //FCH_KOR:set PinMuxs to use EPWM instead of GPIO
     GPIO_SetupPinMux(2, GPIO_MUX_CPU1, 1);
     GPIO_SetupPinMux(3, GPIO_MUX_CPU1, 1);
     GPIO_SetupPinMux(14, GPIO_MUX_CPU1,1 );
@@ -357,54 +344,58 @@ void main(void)
 
 
 
-    EPwm12Regs.TBCTL.bit.CLKDIV = 0;
-    EPwm12Regs.TBCTL.bit.CTRMODE = 0;
-    EPwm12Regs.TBCTL.bit.FREE_SOFT = 2;
-    EPwm12Regs.TBCTL.bit.PHSEN = 0 ;
-    EPwm12Regs.TBCTR = 0;
-    EPwm12Regs.TBPRD = 2500;
-    EPwm12Regs.CMPA.bit.CMPA = 0;
-    EPwm12Regs.AQCTLA.bit.ZRO = 2;
-    EPwm12Regs.AQCTLA.bit.CAU = 1;
-    EPwm12Regs.TBPHS.bit.TBPHS = 0 ;
+    //FCH_KOR: EPWM12A setup to control LED1
+    EPwm12Regs.TBCTL.bit.CLKDIV = 0;//FCH_KOR: clock divide 1
+    EPwm12Regs.TBCTL.bit.CTRMODE = 0;//FCH_KOR: count up mode
+    EPwm12Regs.TBCTL.bit.FREE_SOFT = 2;//FCH_KOR: free Soft emulation mode to Free Run
+    EPwm12Regs.TBCTL.bit.PHSEN = 0 ;//FCH_KOR: disable the phase loading
+    EPwm12Regs.TBCTR = 0;//FCH_KOR: start the timer at zero
+    EPwm12Regs.TBPRD = 2500;//FCH_KOR: set the period (50,000,000,/20,000
+    EPwm12Regs.CMPA.bit.CMPA = 0;//FCH_KOR: initially start the duty cycle at 0%
+    EPwm12Regs.AQCTLA.bit.ZRO = 2;//FCH_KOR: set the pin when the TBCTR register is zero
+    EPwm12Regs.AQCTLA.bit.CAU = 1;//FCH_KOR: clear the pin when the TBCTR register reaches the value in CMPA
+    EPwm12Regs.TBPHS.bit.TBPHS = 0 ;//FCH_KOR: set the phase to zero
 
-    EPwm8Regs.TBCTL.bit.CLKDIV = 4;
+    //FCH_KOR: EPWM8 setup to control RC motors
+    EPwm8Regs.TBCTL.bit.CLKDIV = 4;//FCH_KOR:Made the clock divide 4 as with TBPRD being a 16 bit register, its value could not exceed 65535, so this was the number we found to work for achieving 25Mhz
     EPwm8Regs.TBCTL.bit.CTRMODE = 0;
     EPwm8Regs.TBCTL.bit.FREE_SOFT = 2;
     EPwm8Regs.TBCTL.bit.PHSEN = 0 ;
     EPwm8Regs.TBCTR = 0;
-    EPwm8Regs.TBPRD = 62500;
+    EPwm8Regs.TBPRD = 62500;//FCH_KOR:As mentioned prior, made this value a fourth of what it needs to be with CLKDIV changed accordingly to achieve 25Mhz
     EPwm8Regs.CMPA.bit.CMPA = 0;
     EPwm8Regs.AQCTLA.bit.ZRO = 2;
     EPwm8Regs.AQCTLA.bit.CAU = 1;
-    EPwm8Regs.AQCTLB.bit.ZRO = 2;
-    EPwm8Regs.AQCTLB.bit.CBU = 1 ;
+    EPwm8Regs.AQCTLB.bit.ZRO = 2;//FCH_KOR: add AQCTB for t he second motor
+    EPwm8Regs.AQCTLB.bit.CBU = 1 ;//FCH_KOR: Clear the pin when TBCTR = CMPB on Up Count
     EPwm8Regs.CMPB.bit.CMPB = 0 ;
     EPwm8Regs.TBPHS.bit.TBPHS = 0 ;
 
 
-    EPwm9Regs.TBCTL.bit.CLKDIV = 1;
+    //FCH_KOR: EPWM9 setup to play tones
+    EPwm9Regs.TBCTL.bit.CLKDIV = 1;//FCH_KOR: clock divide 2
     EPwm9Regs.TBCTL.bit.CTRMODE = 0;
     EPwm9Regs.TBCTL.bit.FREE_SOFT = 2;
     EPwm9Regs.TBCTL.bit.PHSEN = 0 ;
     EPwm9Regs.TBCTR = 0;
-    EPwm9Regs.TBPRD = OFFNOTE;
+    EPwm9Regs.TBPRD = OFFNOTE;//FCH_KOR:To set the period to that of OFFNOTE
     EPwm9Regs.CMPA.bit.CMPA = 0;
-    EPwm9Regs.AQCTLA.bit.ZRO = 3;
-    EPwm9Regs.AQCTLA.bit.CAU = 0;
+    EPwm9Regs.AQCTLA.bit.ZRO = 3;//FCH_KOR: Toggle the pin when the TBCTR register is zero
+    EPwm9Regs.AQCTLA.bit.CAU = 0;//FCH_KOR: clear the pin when the TBCTR register reaches the value in CMPA
     EPwm9Regs.TBPHS.bit.TBPHS = 0 ;
 
-    EPwm2Regs.TBCTL.bit.CLKDIV = 0;
+    //FCH_KOR: EPWM2 setup to control DC motors
+    EPwm2Regs.TBCTL.bit.CLKDIV = 0;//FCH_KOR: clock divide 1
     EPwm2Regs.TBCTL.bit.CTRMODE = 0;
     EPwm2Regs.TBCTL.bit.FREE_SOFT = 2;
     EPwm2Regs.TBCTL.bit.PHSEN = 0 ;
     EPwm2Regs.TBCTR = 0;
-    EPwm2Regs.TBPRD = 2500;
+    EPwm2Regs.TBPRD = 2500;//FCH_KOR: Setting to achieve 20Khz
     EPwm2Regs.CMPA.bit.CMPA = 0;
     EPwm2Regs.AQCTLA.bit.ZRO = 2;
     EPwm2Regs.AQCTLA.bit.CAU = 1;
-    EPwm2Regs.AQCTLB.bit.CBU = 1 ;
-    EPwm2Regs.AQCTLB.bit.ZRO = 2;
+    EPwm2Regs.AQCTLB.bit.CBU = 1 ;//FCH_KOR: Clear the pin when TBCTR = CMPB on Up Count
+    EPwm2Regs.AQCTLB.bit.ZRO = 2;//FCH_KOR: set the pin when the TBCTR register is zero
     EPwm2Regs.CMPB.bit.CMPB= 0 ;
     EPwm2Regs.TBPHS.bit.TBPHS = 0 ;
 
@@ -492,11 +483,11 @@ __interrupt void cpu_timer0_isr(void)
 }
 
 // cpu_timer1_isr - CPU Timer1 ISR
-__interrupt void cpu_timer1_isr(void)
+__interrupt void cpu_timer1_isr(void) //FCH_KOR: Exercise 4
 {
-    EPwm9Regs.TBPRD = songarray[index];
+    EPwm9Regs.TBPRD = songarray[index];//FCH_KOR: setting the period to that of the necessary note and then adding to index so we continously move to the next note
     index++;
-    if (index == SONG_LENGTH){
+    if (index == SONG_LENGTH){//FCH_KOR:Once the song length is met, the song should be fully played and stop
         GPIO_SetupPinMux(16, GPIO_MUX_CPU1, 0);
     }
     CpuTimer1.InterruptCount++;
@@ -508,6 +499,11 @@ __interrupt void cpu_timer2_isr(void)
     // Blink LaunchPad Blue LED
     GpioDataRegs.GPATOGGLE.bit.GPIO31 = 1;
 
+    //FCH_KOR: Exercise 1
+    /* FCH_KOR: a global variable int 16_t flag is set to zero by default.
+     *  at first CMPA is being incremented by one each time the interrupt function is called until it reaches the TBCTR (duty =100)
+     *  then the flag is set to 1. While the flag = 1, CMPA is decremented by one until it reaches zero (duty =0)
+     *   then the flag is set back to 0.*/
     if (EPwm12Regs.CMPA.bit.CMPA == EPwm12Regs.TBPRD){
         flag=1;
     }
@@ -521,20 +517,25 @@ __interrupt void cpu_timer2_isr(void)
     }
     CpuTimer2.InterruptCount++;
 
-//    if (controleffort >= 10){ //Exercise 2 code
-//        flag2=1;
-//    }
-//    if (flag2 == 1 ){
-//        controleffort -=0.005;
-//        if(controleffort<=-10)
-//            flag2=0;
-//    }else{
-//        controleffort +=0.005;
-//        flag2=0;
-//    }
-//    setEPWM2B( controleffort);
-//    setEPWM2A( controleffort);
+    //FCH_KOR: Exercise 2
+    /*FCH_KOR: same as exercise 1,controleffort is being incremented to reach approximately 10 from 0 and
+     * is being decremented to reach approximately -10. A flag2 variable is also used to check the range
+     * and switch between counting up and counting down */
+    if (controleffort >= 10){
+        flag2=1;
+    }
+    if (flag2 == 1 ){
+        controleffort -=0.005;
+        if(controleffort<=-10)
+            flag2=0;
+    }else{
+        controleffort +=0.005;
+        flag2=0;
+    }
+    setEPWM2B( controleffort);
+    setEPWM2A( controleffort);
 
+    //FCH_KOR: Exercise 2
     if (flagdegrees1 == 0) {
         degrees = degrees + 0.05;
         if (degrees >= 90)
@@ -556,47 +557,49 @@ __interrupt void cpu_timer2_isr(void)
     }
 }
 
+//FCH_KOR: set the CMPA (duty cycle)
 void setEPWM2A(float controleffort){
-    if(controleffort>10){
+    if(controleffort>10){ //FCH_KOR: saturate controleffort  between -10 and 10
         controleffort=10;
     }
     if(controleffort<-10){
         controleffort=-10;
     }
 
-    EPwm2Regs.CMPA.bit.CMPA = 125*controleffort+1250;
+    EPwm2Regs.CMPA.bit.CMPA = 125.0*controleffort+1250;//FCH_KOR: map [0,100] duty cycle to [-10,10] use linear function
 
 }
+//FCH_KOR: set the CMPB (duty cycle)
 void setEPWM2B(float controleffort){
-    if(controleffort>10){
+    if(controleffort>10){//FCH_KOR: saturate controleffort  between -10 and 10
         controleffort=10;
     }
     if(controleffort<-10){
         controleffort=-10;
     }
-    EPwm2Regs.CMPB.bit.CMPB= 125*controleffort+1250 ;
+    EPwm2Regs.CMPB.bit.CMPB= 125.0*controleffort+1250 ;//FCH_KOR: map [0,100] duty cycle to [-10,10] use linear function
 
 
 }
-
+//FCH_KOR: set the CMPA (duty cycle)
 void setEPWM8A(float degrees){
 
-    if(degrees>90){
+    if(degrees>90){ //FCH_KOR: saturate degrees between -90 and 90
         degrees=90;
     }
     if(degrees<-90){
         degrees=-90;
     }
-    EPwm8Regs.CMPA.bit.CMPA= 27.8*degrees+5000 ;
+    EPwm8Regs.CMPA.bit.CMPA= 27.8*degrees+5000 ; //FCH_KOR: map duty cycle to [-90,90] use linear function
 
-}
+}//FCH_KOR: set the CMPB (duty cycle)
 void setEPWM8B(float degrees){
 
-    if(degrees>90){
+    if(degrees>90){ //FCH_KOR: saturate degrees between -90 and 90
         degrees=90;
     }
     if(degrees<-90){
         degrees=-90;
     }
-    EPwm8Regs.CMPB.bit.CMPB= 27.8*degrees+5000 ;
+    EPwm8Regs.CMPB.bit.CMPB= 27.8*degrees+5000 ; //FCH_KOR: map duty cycle to [-90,90] use linear function
 }
