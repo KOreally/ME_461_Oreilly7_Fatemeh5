@@ -61,13 +61,13 @@ int16_t Temprature=0;
 int16_t GyrXHL=0;
 int16_t GyrYHL=0;
 int16_t GyrZHL=0;
-
-float SAccXHL=0;
-float SAccYHL=0;
-float SAccZHL=0;
-float SGyrXHL=0;
-float SGyrYHL=0;
-float SGyrZHL=0;
+//KOR_FCH Our floats for our scaling of Acceleration and Gyro values
+float SAccX=0;
+float SAccY=0;
+float SAccZ=0;
+float SGyrX=0;
+float SGyrY=0;
+float SGyrZ=0;
 
 __interrupt void SPIB_isr(void) {
     //    spivalue1 = SpibRegs.SPIRXBUF; // KOR_FCH, Read first 16-bit value off RX FIFO. Probably is zero since no chip ex2: nothing important
@@ -77,7 +77,7 @@ __interrupt void SPIB_isr(void) {
     //ADC2=spivalue3/4095.0*3.3;//KOR_FCH, mapping ex2
     //    GpioDataRegs.GPASET.bit.GPIO9 = 1; // Set GPIO9 high to end Slave Select. Now Scope. Later to deselect DAN28027
 
-    GpioDataRegs.GPCSET.bit.GPIO66 = 1; //KOR_FCH, EX3: Set GPIO66 high to end Slave Select. Now Scope. Later to deselect DAN28027
+    GpioDataRegs.GPCSET.bit.GPIO66 = 1; //KOR_FCH, EX3: Set GPIO66 low to start Slave Select.
     //KOR_FCH Reading our gyro and accelerometer values
     junk1=SpibRegs.SPIRXBUF;
     AccXHL=SpibRegs.SPIRXBUF;
@@ -87,8 +87,13 @@ __interrupt void SPIB_isr(void) {
     GyrXHL=SpibRegs.SPIRXBUF;
     GyrYHL=SpibRegs.SPIRXBUF;
     GyrZHL=SpibRegs.SPIRXBUF;
-
-
+    //KOR_FCH Scaling the Acceleration and gyro values so they are ranging between -4g-4g and -250-250 degrees respectively, maximum positive value of an int 16 is 32767 which is why we divide by this
+    SAccX = AccXHL*4.0/32767.0;
+    SAccY = AccYHL*4.0/32767.0;
+    SAccZ = AccZHL*4.0/32767.0;
+    SGyrX = GyrXHL*250.0/32767.0;
+    SGyrY = GyrYHL*250.0/32767.0;
+    SGyrZ = GyrZHL*250.0/32767.0;
 
     // Later when actually communicating with the DAN28027 do something with the data. Now do nothing.
     SpibRegs.SPIFFRX.bit.RXFFOVFCLR = 1; // Clear Overflow flag just in case of an overflow
@@ -393,8 +398,8 @@ void main(void)
     while(1)
     {
         if (UARTPrint == 1 ) {
-//            serial_printf(&SerialA,"ADC1:%lf ADC2: %lf\r\n",ADC1,ADC2);//KOR_FCH, ex2 printing the mapped ADCs to Tera Term
-            serial_printf(&SerialA,"AccXHL:%lf AccYHL: %lf AccZHL:%lf GyrXHL: %lf GyrYHL:%lf gyrZHL: %lf\r\n",AccXHL,AccYHL,AccZHL,GyrXHL,GyrYHL,GyrZHL);
+            //            serial_printf(&SerialA,"ADC1:%lf ADC2: %lf\r\n",ADC1,ADC2);//KOR_FCH, ex2 printing the mapped ADCs to Tera Term
+            serial_printf(&SerialA,"AccX:%f AccY: %f AccZ:%f GyrX: %f GyrY:%f gyrZ: %f\r\n",SAccX,SAccY,SAccZ,SGyrX,SGyrY,SGyrZ);
             UARTPrint = 0;
         }
     }
@@ -460,6 +465,7 @@ __interrupt void cpu_timer0_isr(void)
     //    SpibRegs.SPITXBUF = PWM1value; // something so you can see the pattern on the Oscilloscope  //
     //    SpibRegs.SPITXBUF = PWM2value; // something so you can see the pattern on the Oscilloscope  //
 
+    GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
     SpibRegs.SPIFFRX.bit.RXFFIL = 8;
     SpibRegs.SPITXBUF = 0xBA00;
     SpibRegs.SPITXBUF = 0x0000;
@@ -672,38 +678,39 @@ void setupSpib(void) //Call this function in main() somewhere after the DINT; li
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
+    //KOR_FCH Ex3 Changed each of the offsets such that in the resting position our x,y,z accel values are approximately 0
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7700 | 0x00EB); // 0x7700
+    SpibRegs.SPITXBUF = (0x7700 | 0x00E7); // 0x7700 KOR_FCH these last two values are related to the Xaccel high
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7800 | 0x0012); // 0x7800
+    SpibRegs.SPITXBUF = (0x7800 | 0x000C); // 0x7800 KOR_FCH these last two values are related to the Xaccel low
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7A00 | 0x0010); // 0x7A00
+    SpibRegs.SPITXBUF = (0x7A00 | 0x00E3); // 0x7A00 KOR_FCH these last two values are related to the Yaccel high
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7B00 | 0x00FA); // 0x7B00
+    SpibRegs.SPITXBUF = (0x7B00 | 0x0002); // 0x7B00 KOR_FCH these last two values are related to the Yaccel low
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7D00 | 0x0021); // 0x7D00
+    SpibRegs.SPITXBUF = (0x7D00 | 0x0025); // 0x7D00 KOR_FCH these last two values are related to the Zaccel high
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7E00 | 0x0050); // 0x7E00
+    SpibRegs.SPITXBUF = (0x7E00 | 0x00B8); // 0x7E00 KOR_FCH these last two values are related to the Zaccel low
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
