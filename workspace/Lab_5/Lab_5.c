@@ -351,7 +351,7 @@ void main(void)
     //    SpibRegs.SPIPRI.bit.FREE = 1; // Free run, continue SPI operation
     //    SpibRegs.SPICTL.bit.SPIINTENA = 0; // Disables the SPI interrupt
     //    SpibRegs.SPIBRR.bit.SPI_BIT_RATE = 49; // Set SCLK bit rate to 1 MHz so 1us period. SPI base clock is
-    //    // 50MHZ. And this setting divides that base clock to create SCLKís period
+    //    // 50MHZ. And this setting divides that base clock to create SCLK√≠s period
     //    SpibRegs.SPISTS.all = 0x0000; // Clear status flags just in case they are set for some reason
     //    SpibRegs.SPIFFTX.bit.SPIRST = 1;// Pull SPI FIFO out of reset, SPI FIFO can resume transmit or receive.
     //    SpibRegs.SPIFFTX.bit.SPIFFENA = 1; // Enable SPI FIFO enhancements
@@ -365,7 +365,7 @@ void main(void)
     //    SpibRegs.SPICCR.bit.SPISWRESET = 1; // Pull the SPI out of reset
     //    SpibRegs.SPIFFTX.bit.TXFIFO = 1; // Release transmit FIFO from reset.
     //    SpibRegs.SPIFFRX.bit.RXFIFORESET = 1; // Re-enable receive FIFO operation
-    //    SpibRegs.SPICTL.bit.SPIINTENA = 1; // Enables SPI interrupt. !! I donít think this is needed. Need to  Test
+    //    SpibRegs.SPICTL.bit.SPIINTENA = 1; // Enables SPI interrupt. !! I don√≠t think this is needed. Need to  Test
     //    SpibRegs.SPIFFRX.bit.RXFFIL = 10; //Interrupt Level to 16 words or more received into FIFO causes interrupt. This is just the initial setting for the register. Will be changed below
     // Enable CPU int1 which is connected to CPU-Timer 0, CPU int13
     // which is connected to CPU-Timer 1, and CPU int 14, which is connected
@@ -432,6 +432,7 @@ __interrupt void cpu_timer0_isr(void)
 
     CpuTimer0.InterruptCount++;
 
+    //KOR_FCH: increment the PWMs values from 0 to 3000 by then the decrement by 10 from 3000 to 0
     if(PWM1flag == 0){
         PWM1value = PWM1value + 10;
     }
@@ -456,11 +457,11 @@ __interrupt void cpu_timer0_isr(void)
         PWM2flag=1;
     }
     //KOR_FCH Clear GPIO9 Low to act as a Slave Select. Right now, just to scope. Later to select DAN28027 chip ex1
-    //    GpioDataRegs.GPACLEAR.bit.GPIO9 = 1;//KOR_FCH, ex3 we don't use GPIO9
+    //    GpioDataRegs.GPACLEAR.bit.GPIO9 = 1;//KOR_FCH, ex3 we don't use GPIO9 anymore ( GPIO9 is ss for ex2 and ex1)
     //    SpibRegs.SPIFFRX.bit.RXFFIL = 2; // Issue the SPIB_RX_INT when two values are in the RX FIFO //KOR_FCH, receiving two 16-bit values ex1
     //    SpibRegs.SPITXBUF = 0x4A3B; // 0x4A3B and 0xB517 have no special meaning. Wanted to send //KOR_FCH, 0b0100101000111011  ex1 MOSI
     //    SpibRegs.SPITXBUF = 0xB517; // something so you can see the pattern on the Oscilloscope  //KOR_FCH, 0b1011010100010111  ex1 MOSI
-    //    SpibRegs.SPIFFRX.bit.RXFFIL = 3; // Issue the SPIB_RX_INT when two values are in the RX FIFO //KOR_FCH, sending and receiving three 16-bit values ex2
+    //    SpibRegs.SPIFFRX.bit.RXFFIL = 3; // Issue the SPIB_RX_INT when three values are in the RX FIFO //KOR_FCH, sending and receiving three 16-bit values ex2
     //    SpibRegs.SPITXBUF = 0x00DA; // 0x4A3B and 0xB517 have no special meaning. Wanted to send //KOR_FCH, Set it as the datasheet ex2
     //    SpibRegs.SPITXBUF = PWM1value; // something so you can see the pattern on the Oscilloscope  //
     //    SpibRegs.SPITXBUF = PWM2value; // something so you can see the pattern on the Oscilloscope  //
@@ -524,7 +525,7 @@ void setupSpib(void) //Call this function in main() somewhere after the DINT; li
     int16_t temp = 0;
     //Step 1.
     // cut and paste here all the SpibRegs initializations you found for part 3. Make sure the TXdelay in
-    //between each transfer to 0. Also donít forget to cut and paste the GPIO settings for GPIO9, 63, 64, 65,
+    //between each transfer to 0. Also don√≠t forget to cut and paste the GPIO settings for GPIO9, 63, 64, 65,
     //66 which are also a part of the SPIB setup.
     SpibRegs.SPICCR.bit.SPISWRESET = 0; // Put SPI in Reset //KOR_FCH Using the Technical reference we found what we need to set the bits to ex1
     SpibRegs.SPICTL.bit.CLK_PHASE = 1; //This happens to be the mode for both the DAN28027 and
@@ -535,7 +536,7 @@ void setupSpib(void) //Call this function in main() somewhere after the DINT; li
     SpibRegs.SPIPRI.bit.FREE = 1; // Free run, continue SPI operation
     SpibRegs.SPICTL.bit.SPIINTENA = 0; // Disables the SPI interrupt
     SpibRegs.SPIBRR.bit.SPI_BIT_RATE = 49; // Set SCLK bit rate to 1 MHz so 1us period. SPI base clock is
-    // 50MHZ. And this setting divides that base clock to create SCLKís period
+    // 50MHZ. And this setting divides that base clock to create SCLK√≠s period
     SpibRegs.SPISTS.all = 0x0000; // Clear status flags just in case they are set for some reason
     SpibRegs.SPIFFTX.bit.SPIRST = 1;// Pull SPI FIFO out of reset, SPI FIFO can resume transmit or receive.
     SpibRegs.SPIFFTX.bit.SPIFFENA = 1; // Enable SPI FIFO enhancements
@@ -549,7 +550,7 @@ void setupSpib(void) //Call this function in main() somewhere after the DINT; li
     SpibRegs.SPICCR.bit.SPISWRESET = 1; // Pull the SPI out of reset
     SpibRegs.SPIFFTX.bit.TXFIFO = 1; // Release transmit FIFO from reset.
     SpibRegs.SPIFFRX.bit.RXFIFORESET = 1; // Re-enable receive FIFO operation
-    SpibRegs.SPICTL.bit.SPIINTENA = 1; // Enables SPI interrupt. !! I donít think this is needed. Need to  Test
+    SpibRegs.SPICTL.bit.SPIINTENA = 1; // Enables SPI interrupt. !! I dont think this is needed. Need to  Test
     SpibRegs.SPIFFRX.bit.RXFFIL = 10; //Interrupt Level to 16 words or more received into FIFO causes interrupt. This is just the initial setting for the register. Will be changed below
     SpibRegs.SPICCR.bit.SPICHAR = 0xF;
     SpibRegs.SPIFFCT.bit.TXDLY = 0x00;
@@ -582,7 +583,6 @@ void setupSpib(void) //Call this function in main() somewhere after the DINT; li
     // Perform the number of needed writes to SPITXBUF to write to all 13 registers. Remember we are sending
     // 16-bit transfers, so two registers at a time after the first 16-bit transfer.
     SpibRegs.SPITXBUF = 0x1300;//KOR_FCH, the first 2 are the address and 00 is the value we are writing to register 0x13
-
     SpibRegs.SPITXBUF = 0x0000;//KOR_FCH, the first 2 write 00 to register 0x14 and 00 is the value we are writing to register 0x15
     SpibRegs.SPITXBUF = 0x0000;//KOR_FCH, the first 2 write 00 to register 0x16 and 00 is the value we are writing to register 0x17
     SpibRegs.SPITXBUF = 0x0013;//KOR_FCH, the first 2 write 00 to register 0x18 and 13 is the value we are writing to register 0x19
@@ -635,7 +635,7 @@ void setupSpib(void) //Call this function in main() somewhere after the DINT; li
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
-    // The Remainder of this code is given to you and you do not need to make any changes.Thank you !!!
+    // The Remainder of this code is given to you and you do not need to make any changes.
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
     SpibRegs.SPITXBUF = (0x3800 | 0x0001); // 0x3800
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
@@ -680,37 +680,37 @@ void setupSpib(void) //Call this function in main() somewhere after the DINT; li
     DELAY_US(10);
     //KOR_FCH Ex3 Changed each of the offsets such that in the resting position our x,y,z accel values are approximately 0
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7700 | 0x00E7); // 0x7700 KOR_FCH these last two values are related to the Xaccel high
+    SpibRegs.SPITXBUF = (0x7700 | 0x00E7); // 0x7700 KOR_FCH these last two values are related to the Xaccel high ex3
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7800 | 0x000C); // 0x7800 KOR_FCH these last two values are related to the Xaccel low
+    SpibRegs.SPITXBUF = (0x7800 | 0x000C); // 0x7800 KOR_FCH these last two values are related to the Xaccel low ex3
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7A00 | 0x00E3); // 0x7A00 KOR_FCH these last two values are related to the Yaccel high
+    SpibRegs.SPITXBUF = (0x7A00 | 0x00E3); // 0x7A00 KOR_FCH these last two values are related to the Yaccel high ex3
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7B00 | 0x0002); // 0x7B00 KOR_FCH these last two values are related to the Yaccel low
+    SpibRegs.SPITXBUF = (0x7B00 | 0x0002); // 0x7B00 KOR_FCH these last two values are related to the Yaccel low ex3
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7D00 | 0x0025); // 0x7D00 KOR_FCH these last two values are related to the Zaccel high
+    SpibRegs.SPITXBUF = (0x7D00 | 0x0025); // 0x7D00 KOR_FCH these last two values are related to the Zaccel high ex3
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
     DELAY_US(10);
     GpioDataRegs.GPCCLEAR.bit.GPIO66 = 1;
-    SpibRegs.SPITXBUF = (0x7E00 | 0x00B8); // 0x7E00 KOR_FCH these last two values are related to the Zaccel low
+    SpibRegs.SPITXBUF = (0x7E00 | 0x00B8); // 0x7E00 KOR_FCH these last two values are related to the Zaccel low ex3
     while(SpibRegs.SPIFFRX.bit.RXFFST !=1);
     GpioDataRegs.GPCSET.bit.GPIO66 = 1;
     temp = SpibRegs.SPIRXBUF;
