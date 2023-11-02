@@ -669,6 +669,7 @@ __interrupt void RXAINT_recv_ready(void)
     SciaRegs.SCIFFRX.bit.RXFFINTCLR = 1;
     PieCtrlRegs.PIEACK.all = PIEACK_GROUP9;
 }
+
 //for SerialB
 #ifdef _FLASH
 #pragma CODE_SECTION(RXBINT_recv_ready, ".TI.ramfunc");
