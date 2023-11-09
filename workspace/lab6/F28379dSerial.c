@@ -655,7 +655,7 @@ __interrupt void RXAINT_recv_ready(void)
         SciaRegs.SCIFFRX.bit.RXFIFORESET = 1;
     } else {
         RXAdata = RXAdata & 0x00FF;
-        numRXA ++;
+        numRXA ++; //KOR_FCH Added all the keyboard commands necessary to make the robot move left, right, forward, and stop ex6
         if (RXAdata == 'q') {
             turn = turn + 0.05;
         } else if (RXAdata == 'r') {

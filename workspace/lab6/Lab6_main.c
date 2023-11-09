@@ -101,7 +101,7 @@ float IKL_1 = 0;
 float IKR_1 = 0;
 float uR = 0;
 float uL =0 ;
-float eturn = 0; //KOR_FCH Variables for ex4
+float eturn = 0; //KOR_FCH Variables for ex4 to track robot position in Labview
 float turn = 0;
 float kturn = 3;
 float printLV3 = 0;
@@ -607,7 +607,7 @@ __interrupt void cpu_timer2_isr(void)
     GpioDataRegs.GPATOGGLE.bit.GPIO31 = 1;
 
     CpuTimer2.InterruptCount++;
-
+//KOR_FCH Variables and math to find the velocities of each wheel
     LeftWheel = readEncLeft();
     RightWheel = readEncRight();
     LeftWheelft = LeftWheel/5.15;
@@ -617,7 +617,7 @@ __interrupt void cpu_timer2_isr(void)
     RightWheelft = RightWheel/5.15;
     PosRight_K = RightWheelft;
 
-    PhiR = Rwh/Wr *(RightWheel - LeftWheel );
+    PhiR = Rwh/Wr *(RightWheel - LeftWheel ); //KOR_FCH ex 6 adding the math to find the position of our robot in Labview
 
 
     VRightK= (PosRight_K- PosRight_K_1)*250;
@@ -629,7 +629,7 @@ __interrupt void cpu_timer2_isr(void)
     xRk = xRk_1 + (dotxRk+dotxRk_1)*0.002;
     yRk = yRk_1 + (dotyRk+dotyRk_1)*0.002;
 
-    //KOR_FCH Implementing the integral
+    //KOR_FCH Implementing the integral ex 3
     IKL=IKL_1 + (eL+eL_1)*0.002;
     IKR=IKR_1 + (eR+eR_1)*0.002;
 
@@ -639,7 +639,7 @@ __interrupt void cpu_timer2_isr(void)
     eL = (Vref-VLeftK) - kturn*eturn;
     eR = (Vref-VRightK) + kturn*eturn;
 
-    //KOR_FCH Checking if the command is saturated and preventing integral windup
+    //KOR_FCH Checking if the command is saturated and preventing integral windup ex 3
     if (uL >= 10 || uL <= -10)
         IKL = IKL_1;
 
@@ -689,7 +689,7 @@ __interrupt void cpu_timer2_isr(void)
         printLV7 = fromLVvalues[6];
         printLV8 = fromLVvalues[7];
     }
-    if((CpuTimer2.InterruptCount % 62) == 0) { // change to the counter variable of you selected 4ms. timer//KOR_FCH ex5 lab6 sent every 52 ms
+    if((CpuTimer2.InterruptCount % 62) == 0) { // change to the counter variable of you selected 4ms. timer//KOR_FCH ex5 lab6 every 248 ms
         DataToLabView.floatData[0] = xRk;
         DataToLabView.floatData[1] = yRk;
         DataToLabView.floatData[2] = PhiR;
@@ -978,7 +978,7 @@ float readEncRight(void) {
 
 //FCH_KOR: set the CMPA (duty cycle)ex2
 void setEPWM2A(float controleffort){
-    if(controleffort>10){ //FCH_KOR: saturate controleffort  between -10 and 10
+    if(controleffort>10){ //FCH_KOR: saturate control effort  between -10 and 10
         controleffort=10;
     }
     if(controleffort<-10){
