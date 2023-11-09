@@ -44,6 +44,7 @@ uint16_t NewCAMDataThreshold2 = 0;  // Flag new data
 CAMRecFloats_t DataFromCameraThreshold2;
 float fromCAMvaluesThreshold2[CAMNUM_FROM_FLOATS];
 
+
 uint16_t tempLSB = 0;
 LVRecFloats_t DataFromLabView;
 LVSendFloats_t DataToLabView;
@@ -661,9 +662,13 @@ __interrupt void RXAINT_recv_ready(void)
             turn = turn - 0.05;
         } else if (RXAdata == '3') {
             Vref = Vref + 0.1;
-        } else {
+        } else if (RXAdata == 'a') {
             turn = 0;
             Vref = 0.5;
+        }
+        else if (RXAdata == 's') {
+            turn = 0;
+            Vref = 0;
         }
     }
     SciaRegs.SCIFFRX.bit.RXFFINTCLR = 1;

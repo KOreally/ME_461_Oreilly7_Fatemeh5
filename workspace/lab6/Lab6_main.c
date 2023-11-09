@@ -88,7 +88,7 @@ float PosLeft_K = 0;
 float PosLeft_K_1 = 0;
 float PosRight_K = 0;
 float PosRight_K_1 = 0 ;
-float Vref = -1; //KOR_FCH Variables for ex3
+float Vref = 0; //KOR_FCH Variables for ex3
 float Kp=3;
 float KI=25;
 float eR=0;
@@ -104,6 +104,36 @@ float uL =0 ;
 float eturn = 0; //KOR_FCH Variables for ex4
 float turn = 0;
 float kturn = 3;
+float printLV3 = 0;
+float printLV4 = 0;
+float printLV5 = 0;
+float printLV6 = 0;
+float printLV7 = 0;
+float printLV8 = 0;
+float x = 0;
+float y = 0;
+float bearing = 0;
+extern uint16_t NewLVData;
+extern float fromLVvalues[LVNUM_TOFROM_FLOATS];
+extern LVSendFloats_t DataToLabView;
+extern char LVsenddata[LVNUM_TOFROM_FLOATS*4+2];
+extern uint16_t newLinuxCommands;
+extern float LinuxCommands[CMDNUM_FROM_FLOATS];
+float Rwh = 0.19460 ;
+float Wr = 0.56759;
+
+float PhiR = 0;
+float dotThetaAvg = 0;
+float dotxRk = 0;
+float dotyRk = 0;
+float xRk = 0;
+float yRk = 0 ;
+float dotxRk_1 = 0;
+float dotyRk_1 = 0;
+float xRk_1 = 0;
+float yRk_1 = 0 ;
+
+
 
 __interrupt void SPIB_isr(void) {
     //    spivalue1 = SpibRegs.SPIRXBUF; // KOR_FCH, Read first 16-bit value off RX FIFO. Probably is zero since no chip ex2: nothing important
@@ -459,8 +489,8 @@ void main(void)
             //            serial_printf(&SerialA,"AccX:%f AccY: %f AccZ:%f GyrX: %f GyrY:%f gyrZ: %f\r\n",SAccX,SAccY,SAccZ,SGyrX,SGyrY,SGyrZ);
             //            serial_printf(&SerialA,"LeftWheel:%f RightWheel: %f\r\n",LeftWheel, RightWheel); //KOR_FCH Printing our encoder values to Tera Term ex1
             //            serial_printf(&SerialA,"LeftWheelft:%f RightWheelft: %f\r\n",LeftWheelft, RightWheelft); //KOR_FCH Printing our encoder values to Tera Term ex1
-            serial_printf(&SerialA,"LeftVelocity:%f RightVelocity: %f\r\n",VLeftK, VRightK); //KOR_FCH Printing our encoder values to Tera Term ex1
-
+            //            serial_printf(&SerialA,"LeftVelocity:%f RightVelocity: %f\r\n",VLeftK, VRightK); //KOR_FCH Printing our encoder values to Tera Term ex1
+            serial_printf(&SerialA,"xPos:%f yPos: %f\r\n",xRk, yRk);
 
             UARTPrint = 0;
         }
@@ -583,24 +613,33 @@ __interrupt void cpu_timer2_isr(void)
     LeftWheelft = LeftWheel/5.15;
     PosLeft_K = LeftWheelft;
 
+
     RightWheelft = RightWheel/5.15;
     PosRight_K = RightWheelft;
+
+    PhiR = Rwh/Wr *(RightWheel - LeftWheel );
 
 
     VRightK= (PosRight_K- PosRight_K_1)*250;
     VLeftK= (PosLeft_K- PosLeft_K_1)*250;
 
+    dotThetaAvg = ((VRightK + VLeftK )/2)*5.15;
+    dotxRk = Rwh*dotThetaAvg*cos(PhiR);
+    dotyRk = Rwh*dotThetaAvg*sin(PhiR);
+    xRk = xRk_1 + (dotxRk+dotxRk_1)*0.002;
+    yRk = yRk_1 + (dotyRk+dotyRk_1)*0.002;
+
     //KOR_FCH Implementing the integral
     IKL=IKL_1 + (eL+eL_1)*0.002;
     IKR=IKR_1 + (eR+eR_1)*0.002;
 
-//    eL = (Vref-VLeftK); // KOR_FCH defined errors for ex3 lab 6
-//    eR = (Vref-VRightK);
+    //    eL = (Vref-VLeftK); // KOR_FCH defined errors for ex3 lab 6
+    //    eR = (Vref-VRightK);
     eturn = turn + (VLeftK-VRightK);// KOR_FCH defined errors for ex4 lab 6
     eL = (Vref-VLeftK) - kturn*eturn;
     eR = (Vref-VRightK) + kturn*eturn;
 
-//KOR_FCH Checking if the command is saturated and preventing integral windup
+    //KOR_FCH Checking if the command is saturated and preventing integral windup
     if (uL >= 10 || uL <= -10)
         IKL = IKL_1;
 
@@ -622,6 +661,13 @@ __interrupt void cpu_timer2_isr(void)
     IKL_1=IKL;
     IKR_1=IKR;
 
+    xRk_1 = xRk;
+    yRk_1 = yRk;
+
+    dotxRk_1 = dotxRk;
+    dotyRk_1 = dotyRk;
+
+
 
 
     //    setEPWM2B( -uLeft); //KOR_FCH ex2 lab6
@@ -630,6 +676,38 @@ __interrupt void cpu_timer2_isr(void)
 
     if ((CpuTimer2.InterruptCount % 10) == 0) {
         UARTPrint = 1;
+    }
+
+    if (NewLVData == 1) {
+        NewLVData = 0;
+        Vref = fromLVvalues[0];
+        turn = fromLVvalues[1];
+        printLV3 = fromLVvalues[2];
+        printLV4 = fromLVvalues[3];
+        printLV5 = fromLVvalues[4];
+        printLV6 = fromLVvalues[5];
+        printLV7 = fromLVvalues[6];
+        printLV8 = fromLVvalues[7];
+    }
+    if((CpuTimer2.InterruptCount % 62) == 0) { // change to the counter variable of you selected 4ms. timer//KOR_FCH ex5 lab6 sent every 52 ms
+        DataToLabView.floatData[0] = xRk;
+        DataToLabView.floatData[1] = yRk;
+        DataToLabView.floatData[2] = PhiR;
+        DataToLabView.floatData[3] = 2.0*((float)numTimer0calls)*.001;
+        DataToLabView.floatData[4] = 3.0*((float)numTimer0calls)*.001;
+        DataToLabView.floatData[5] = (float)numTimer0calls;
+        DataToLabView.floatData[6] = (float)numTimer0calls*4.0;
+        DataToLabView.floatData[7] = (float)numTimer0calls*5.0;
+        LVsenddata[0] = '*'; // header for LVdata
+        LVsenddata[1] = '$';
+        for (int i=0;i<LVNUM_TOFROM_FLOATS*4;i++) {
+            if (i%2==0) {
+                LVsenddata[i+2] = DataToLabView.rawData[i/2] & 0xFF;
+            } else {
+                LVsenddata[i+2] = (DataToLabView.rawData[i/2]>>8) & 0xFF;
+            }
+        }
+        serial_sendSCID(&SerialD, LVsenddata, 4*LVNUM_TOFROM_FLOATS + 2);
     }
 }
 void setupSpib(void) //Call this function in main() somewhere after the DINT; line of code.
